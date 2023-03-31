@@ -41,8 +41,8 @@ var moveZMatrix = new Float32Array(16);
 var scaleMatrix = new Float32Array(16); // ΝΕΟ.6: δήλωση του πίνακα μετασχηματισμού περιστροφής
 var totalX = 0.0
 var totalY = 0.0
-var totalScaleX = 0;
-var totalScaleY = 0;
+var totalScaleX = 1;
+var totalScaleY = 1;
 
 var finalscale = new Float32Array(16);
 var finalM = new Float32Array(16);
@@ -135,10 +135,10 @@ function drawScene() {
 		
 	txtStepAngle = document.getElementById("stepAngleTxt").value; // ΝΕΟ.9: Πάρε από το textbox τη γωνία-βήμα που έδωσε ο χρήστης (μορφή text)
 	var numStepAngle = parseFloat(txtStepAngle);// ΝΕΟ.10: Μετάτρεψέ τη σε αριθμό 
-	var moveX;
-	var moveY;
-	var scaleX;
-	var scaleY;
+	var moveX=0;
+	var move=0;
+	var scaleX=1;
+	var scaleY=1;
 
 	moveX = (parseFloat(document.getElementById("moveX").value))/10.0;
 	moveY = (parseFloat(document.getElementById("moveY").value))/10.0;
@@ -146,18 +146,20 @@ function drawScene() {
 	scaleY = (parseFloat(document.getElementById("scaleY").value));
 	totalX+=moveX;
 	totalY+=moveY;
-	totalScaleX+=scaleX;
-	totalScaleY+=scaleY;
+
 	//totalX = 0.5;
 	//totalY = 0;
 	numStepAngle = numStepAngle*Math.PI/180.0; // ΝΕΟ.11: Με τη βοήθεια της συνάρτησης βιβλιοθήκης μετάτρεψε το βήμα της γωνίας σε ακτίνια (υποθέτουμε ότι ο χρήστης δίνει μοίρες):
 		// 180 μοίρες	-> Math.PI
 		// numStepAngle	->    ?
 	totalAngle += numStepAngle;// ΝΕΟ.12: Ενημέρωσε τη συνολική γωνία περιστροφής (αύξηση κατά το βήμα που έδωσε ο χρήστης) 
+	totalScaleX+=scaleX;
+	totalScaleY+=scaleY;
 	glMatrix.mat4.fromTranslation(moveZMatrix,[totalX,totalY,0]);
 	glMatrix.mat4.fromZRotation(rotationZMatrix, totalAngle);
+	glMatrix.mat4.fromScaling(finalscale,[totalScaleX,totalScaleY,1]);
 	glMatrix.mat4.multiply(finalM,moveZMatrix,rotationZMatrix);
-	glMatrix.mat4.multiplyScalar(finalfinalM,finalM,5)
+	glMatrix.mat4.multiply(finalfinalM,finalM,finalscale);
 	 // ΝΕΟ.13: Με τη βοήθεια της 
 	// βιβλιοθήκης, δημιούργησε πίνακα περιστροφής γύρω από τον z, κατά γωνία totalAngle
 
@@ -182,7 +184,8 @@ function drawScene() {
 	// ΔΙΚΟΣΑΣ.7 Αποθηκεύστε στον finalM το γινόμενό των δύο μετασχηματισμών, υπολογίζοντάς το με τη βοήθεια της μεθόδου multiply της βιβλιοθήκης 
 	
 	// ΔΙΚΟΣΑΣ.8 Αντικαταστήστε στην παρακάτω (ΝΕΟ.14) εντολή τον rotationZMatrix με τον πίνακα που περιέχει το γινόμενο
-	gl.uniformMatrix4fv(verticesTransformUniformPointer, false, finalM); // ΝΕΟ.14: Τάισε τον πίνακα στο αντίστοιχο uniform
+	gl.uniformMatrix4fv(verticesTransformUniformPointer, false, finalM);
+	gl.uniformMatrix4fv(verticesTransformUniformPointer, false, finalfinalM); // ΝΕΟ.14: Τάισε τον πίνακα στο αντίστοιχο uniform
 	// Σε αντίθεση με τα attributes, δε χρειάζεται να μεσολαβήσει buffer για να μεταφερθεί η πληροφορία από τον πίνακα στο uniform
 	
 	
